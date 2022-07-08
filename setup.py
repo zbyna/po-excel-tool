@@ -13,8 +13,8 @@ install_requires=[
 setup(name='po-excel-tool',
       version=version,
       description='Convert between Excel and PO files',
-      long_description=open('README.rst').read() + '\n' + \
-              open('changes.rst').read(),
+      long_description=open('README.md').read() + '\n' + \
+              open('changes.md').read(),
       classifiers=[
           'Environment :: Console',
           'Intended Audience :: Developers',
