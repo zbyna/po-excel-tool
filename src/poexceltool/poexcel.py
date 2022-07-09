@@ -28,8 +28,6 @@ def poexcel():
 def save(output_file, catalog):
     """Save catalog to a PO file.
 
-    This is mostly a stripped down copy of POFile.save so we can save the
-    catalog to a file safely created by click.
     """
     with click.open_file(output_file, mode='w', encoding='utf-8') as f:
         f.write(unicode(catalog))
@@ -56,11 +54,24 @@ def po_timestamp(filename):
 @click.option('-if', '--inputfile','input_file', 
         type=click.Path(exists=True, readable=True), default = 'messages.xlsx',
         show_default=True,
-        help='name of the input xlsx file')
+        help='input xlsx file')
 @click.argument('locale', required=False, nargs=-1)
 def fromXLS(ignore, locale, input_file, output_dir):
     """
     Convert a XLS(X) file to a .PO file
+
+    \b
+    pet fromxls en cs
+    - create en.po and cs.po files from messages.xlsx
+
+    \b
+    pet fromxls en=British.po cs=Czech.po
+    - create British.po and Czech.po from message.xlsx
+
+   \b 
+    pet fromxls
+    - extract all locales from messages.xlsx to appropriate po files
+      in current directory
     """
     book = openpyxl.load_workbook(input_file)
     for sheet in book.worksheets:
@@ -172,10 +183,23 @@ def toXLS(comments, output, catalogs, msgmerge):
     """
     Convert .PO files to an XLSX file.
 
-    po-to-xls tries to guess the locale for PO files by looking at the
-    "Language" key in the PO metadata, falling back to the filename. You
-    can also specify the locale manually by adding prefixing the filename
-    with "<locale>:". For example: "nl:locales/nl/mydomain.po".
+    \b
+    guessing locale for PO files: 
+        1. "Language" key in the PO metadata,
+        2. filename.
+    manual locale specification:
+        pet toxls cs=basedir/czech/mydomain.po
+
+    \b
+    pet toxls en.po Bulgarian.po
+    - add files en.po and bg.po as en and bg locale to messages.xlsx
+    \b
+    pet toxls en=British.po cs=Czech.po
+    - add files British.po and Czech.po as en and cs locale to messages.xlsx
+
+    \b
+    pet toxls
+    - add all po files from current dir to messages.xlsx
     """
     if not catalogs:
         pofiles = [f for f in Path(os.getcwd()).glob('*.po')]
