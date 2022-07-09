@@ -144,9 +144,9 @@ class CatalogFile(click.Path):
                 readable=True)
 
     def convert(self, value, param, ctx):
-        if not os.path.exists(value) and ':' in value:
+        if not os.path.exists(value) and '=' in value:
             # The user passed a <locale>:<path> value
-            (locale, path) = value.split(':', 1)
+            (locale, path) = value.split('=', 1)
             path = os.path.expanduser(path)
             real_path = super(CatalogFile, self).convert(path, param, ctx)
             return (locale, polib.pofile(real_path))
