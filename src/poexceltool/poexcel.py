@@ -21,7 +21,9 @@ try:
 except ImportError:
     from openpyxl.writer.dump_worksheet import WriteOnlyCell
 
-@click.group()
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+@click.group(context_settings=CONTEXT_SETTINGS)
 def poexcel():
     pass
 
@@ -43,7 +45,7 @@ def po_timestamp(filename):
         time.strftime('%H%M', time.gmtime(abs(offset))))
 
 
-@poexcel.command('fromxls')
+@poexcel.command('fromxls',context_settings=CONTEXT_SETTINGS)
 @click.option('-is', '--ignoresheet', 'ignore', multiple=True,
         type=str,
         help='Ignore sheets with specific names.')
@@ -170,7 +172,7 @@ class CatalogFile(click.Path):
             return (locale, catalog)
 
 
-@poexcel.command('toxls')
+@poexcel.command('toxls',context_settings=CONTEXT_SETTINGS)
 @click.option('-c', '--comments', multiple=True,
         type=click.Choice(['translator', 'extracted', 'reference', 'all']),
         default=['reference'],
