@@ -220,6 +220,10 @@ def toXLS(comments, output, catalogs, msgmerge):
     for (locale, catalog) in catalogs:
         has_msgctxt = has_msgctxt or any(m.msgctxt for m in catalog)
 
+    if catalogs == []:
+        click.secho('There is no po file to add to excel file !',fg='yellow')
+        return
+
     fuzzy_font = Font(italic=True, bold=True)
 
     messages = []
