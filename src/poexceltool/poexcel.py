@@ -14,6 +14,7 @@ try:
 except NameError:
     unicode = str
 from pathlib import Path
+from openpyxl.utils.cell import get_column_letter
 from openpyxl.styles import Font
 # openpyxl versions < 2.5.0b1
 try:
@@ -240,6 +241,7 @@ def toXLS(comments, output, catalogs, msgmerge):
 
     book = openpyxl.Workbook(write_only=True)
     sheet = book.create_sheet(title=u'Translations')
+    sheet.freeze_panes = get_column_letter(2 + (3 if 'all' in comments else len(comments) )) + '2'
 
     row = []
     has_msgctxt_column = has_occurrences_column = has_comment_column = has_tcomment_column = None
@@ -296,7 +298,6 @@ def toXLS(comments, output, catalogs, msgmerge):
                     row.append(msg.msgstr)
             sheet.append(row)
 
-    sheet.freeze_panes = 'B1'
     book.save(output)
     click.secho(f'{output.name} created',italic=True)
 
