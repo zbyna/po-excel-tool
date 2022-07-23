@@ -131,4 +131,5 @@ dmypy.json
 src/poexceltool/for-testing.rar
 src/poexceltool/messages.xlsx
 src/poexceltool/texts.xlsx
-
+src/poexceltool/pokus-excel.py
+src/poexceltool/*.po
