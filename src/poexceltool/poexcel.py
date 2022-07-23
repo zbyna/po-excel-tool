@@ -16,6 +16,7 @@ except NameError:
 from pathlib import Path
 from openpyxl.utils.cell import get_column_letter
 from openpyxl.styles import Font
+from openpyxl.styles import Alignment
 # openpyxl versions < 2.5.0b1
 try:
     from openpyxl.cell import WriteOnlyCell
@@ -261,7 +262,7 @@ def toXLS(comments, output, catalogs, msgmerge):
 
     for (i, cat) in enumerate(catalogs):
         row.append(cat[0])
-    sheet.append(row)
+    row_widths = [len(r) for r in row]
 
     ref_catalog = catalogs[0][1]
 
@@ -296,11 +297,25 @@ def toXLS(comments, output, catalogs, msgmerge):
                     row.append(cell)
                 else:
                     row.append(msg.msgstr)
+            row_widths = [ max(rw,r) for rw,r in zip( row_widths, [len(r) for r in row] ) ]
             sheet.append(row)
 
     book.save(output)
     click.secho(f'{output.name} created',italic=True)
 
+    click.secho('Adjusting columns width ...',italic=True)
+    temp_book = openpyxl.load_workbook(output.name)
+    sheet = temp_book['Translations']
+    min_value = 20
+    max_value = 50
+    for cn in range(1,sheet.max_column+1):
+        # https://www.office-forums.com/threads/xlsx-cell-width-in-twips.2163622/#post-6923644
+        column_width_calculation = math.trunc((row_widths[cn-1]*7.6+5)/7*256)/256
+        # print(f'column: {get_column_letter(cn)} length: {row_widths[cn-1]}, calculated length: {column_width_calculation} ')
+        sheet.column_dimensions[get_column_letter(cn)].width = max( min(column_width_calculation, max_value), min_value )
+    for row in sheet.iter_rows():
+        for ce in row:
+          ce.alignment = Alignment(wrapText=True,vertical='center')
 
 if __name__ == '__main__':
     poexcel()
