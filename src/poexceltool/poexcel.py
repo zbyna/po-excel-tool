@@ -17,6 +17,8 @@ from pathlib import Path
 from openpyxl.utils.cell import get_column_letter
 from openpyxl.styles import Font
 from openpyxl.styles import Alignment
+from openpyxl.worksheet.table import Table, TableStyleInfo
+import math
 # openpyxl versions < 2.5.0b1
 try:
     from openpyxl.cell import WriteOnlyCell
@@ -153,6 +155,11 @@ def fromXLS(ignore, locale, input_file, output_dir):
 
 
 
+def prepare_cell(sheet,value,font=None):
+    cell = WriteOnlyCell(sheet,value)
+    cell.font = font
+    return cell
+
 class CatalogFile(click.Path):
     def __init__(self):
         super(CatalogFile, self).__init__(exists=True, dir_okay=False,
@@ -228,8 +235,6 @@ def toXLS(comments, output, catalogs, msgmerge):
         click.secho('There is no po file to add to excel file !',fg='yellow')
         return
 
-    fuzzy_font = Font(italic=True, bold=True)
-
     messages = []
     seen = set()
     for (_, catalog) in catalogs:
@@ -262,7 +267,12 @@ def toXLS(comments, output, catalogs, msgmerge):
 
     for (i, cat) in enumerate(catalogs):
         row.append(cat[0])
+    
+    fuzzy_font = Font(italic=True, bold=True)
+    header_font = Font(sz=14 ,bold=True)
     row_widths = [len(r) for r in row]
+    row_headers = [prepare_cell(sheet, r,font=header_font) for r in row]
+    sheet.append(row_headers)
 
     ref_catalog = catalogs[0][1]
 
@@ -292,8 +302,7 @@ def toXLS(comments, output, catalogs, msgmerge):
                 if msg is None:
                     row.append(None)
                 elif 'fuzzy' in msg.flags:
-                    cell = WriteOnlyCell(sheet, value=msg.msgstr)
-                    cell.font = fuzzy_font
+                    cell = prepare_cell(sheet,msg.msgstr,font=fuzzy_font)
                     row.append(cell)
                 else:
                     row.append(msg.msgstr)
@@ -316,6 +325,18 @@ def toXLS(comments, output, catalogs, msgmerge):
     for row in sheet.iter_rows():
         for ce in row:
           ce.alignment = Alignment(wrapText=True,vertical='center')
+
+    click.secho('Styling table ...',italic=True)
+    all_data = sheet.calculate_dimension()
+    # headerRowCount=0 removes filter marks from headers columns
+    tab = Table(displayName="Table_TR", ref=all_data, headerRowCount=1)
+    # Add a default style with striped rows
+    style = TableStyleInfo(name="TableStyleMedium22", showFirstColumn=False,
+                        showLastColumn=False, showRowStripes=True, showColumnStripes=False)
+    tab.tableStyleInfo = style
+    sheet.add_table(tab)
+
+    temp_book.save(output.name)
 
 if __name__ == '__main__':
     poexcel()
