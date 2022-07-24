@@ -8,6 +8,7 @@ install_requires=[
         'polib',
         'openpyxl',
         'argparse;python_version<"3.0"',
+        'tqdm',
         ]
 
 setup(name='po-excel-tool',

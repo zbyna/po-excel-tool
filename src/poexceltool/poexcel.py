@@ -19,6 +19,7 @@ from openpyxl.styles import Font
 from openpyxl.styles import Alignment
 from openpyxl.worksheet.table import Table, TableStyleInfo
 import math
+from tqdm import tqdm
 # openpyxl versions < 2.5.0b1
 try:
     from openpyxl.cell import WriteOnlyCell
@@ -37,7 +38,6 @@ def save(output_file, catalog):
     """
     with click.open_file(output_file, mode='w', encoding='utf-8') as f:
         f.write(unicode(catalog))
-    click.echo('Created file: %s' % output_file )
 
 
 def po_timestamp(filename):
@@ -106,10 +106,11 @@ def fromXLS(ignore, locale, input_file, output_dir):
             locale = [cell.value for cell in book['Translations'][1][locale_first_col:]]
         locales = [lc.split('=') if '=' in lc else (lc, lc+'.po') for lc in locale]
         locales = [(item[0],os.path.join(output_dir,item[1])) for item in locales]
-        print(f"locale je: {locales}")
-        print(f"outputdir je:{output_dir}")
-        for locale_name,file_name in locales:
-            print(f"Processing locale: {locale_name}")
+        # print(f"locale je: {locales}")
+        # print(f"outputdir je:{output_dir}")
+        files_created = []
+        for locale_name,file_name in tqdm(locales,desc='Po files creating:',position=0):
+            # print(f"Processing locale: {locale_name}")
             msgstr_column = headers.get(locale_name)
             if msgstr_column is None:
                 click.echo(u'Could not find a "%s" column' % locale_name, err=True)
@@ -123,34 +124,38 @@ def fromXLS(ignore, locale, input_file, output_dir):
             catalog.metadata['Content-Transfer-Encoding'] = '8bit'
             catalog.metadata['Language'] = locale_name
             catalog.metadata['Generated-By'] = 'xls-to-po 1.0'
-            with click.progressbar(sheet.iter_rows(min_row=2), length=sheet.max_row - 1,
-                    label='Extracting messages') as rows:
-                for row in rows:
-                    row = [c.value for c in row]
-                    if not row[msgid_column]:
-                        continue
-                    try:
-                        entry = polib.POEntry(
-                                msgid=row[msgid_column],
-                                msgstr=row[msgstr_column] or '')
-                        if msgctxt_column is not None and row[msgctxt_column]:
-                            entry.msgctxt = row[msgctxt_column]
-                        if tcomment_column:
-                            entry.tcomment = row[tcomment_column]
-                        if comment_column:
-                            entry.comment = row[comment_column]
-                        if occurrences_column:
-                            if ':' in row[occurrences_column]:
-                                entry.occurrences.append(row[occurrences_column].split(':',1))
-                            else:
-                                entry.occurrences.append([row[occurrences_column],''])
-                        catalog.append(entry)
-                    except IndexError:
-                        click.echo('Row %s is too short' % row, err=True)
+            for row in tqdm(sheet.iter_rows(min_row=2, max_row=sheet.max_row - 1), total=sheet.max_row-1, desc=f"creating {locale_name}", position=1, leave=False):
+                # time.sleep(0.0001)
+                row = [c.value for c in row]
+                if not row[msgid_column]:
+                    continue
+                try:
+                    entry = polib.POEntry(
+                            msgid=row[msgid_column],
+                            msgstr=row[msgstr_column] or '')
+                    if msgctxt_column is not None and row[msgctxt_column]:
+                        entry.msgctxt = row[msgctxt_column]
+                    if tcomment_column:
+                        entry.tcomment = row[tcomment_column]
+                    if comment_column:
+                        entry.comment = row[comment_column]
+                    if occurrences_column:
+                        if ':' in row[occurrences_column]:
+                            entry.occurrences.append(row[occurrences_column].split(':',1))
+                        else:
+                            entry.occurrences.append([row[occurrences_column],''])
+                    catalog.append(entry)
+                except IndexError:
+                    click.echo('Row %s is too short' % row, err=True)
             if not catalog:
                 click.echo('No messages found, aborting', err=True)
                 sys.exit(1)
             save(file_name,catalog)
+            files_created.append(file_name)
+
+    nf = len(files_created)
+    click.secho(f"{nf} files created: ")
+    click.echo_via_pager("\n".join( [", ".join(x) for x in [files_created[i:i+5] for i in range(0, nf, 5)] ] ))
 
 
 
@@ -276,43 +281,41 @@ def toXLS(comments, output, catalogs, msgmerge):
 
     ref_catalog = catalogs[0][1]
 
-    with click.progressbar(messages, label='Writing catalog to sheet') as todo:
-        for (msgid, msgctxt, message) in todo:
-            row = []
-            if has_msgctxt_column is not None:
-                row.append(msgctxt)
-            row.append(msgid)
-            msg = ref_catalog.find(msgid, msgctxt=msgctxt)
-            if has_occurrences_column:
-                o = []
-                if msg is not None:
-                    for (entry, lineno) in msg.occurrences:
-                        if lineno:
-                            o.append(u'%s:%s' % (entry, lineno))
-                        else:
-                            o.append(entry)
-                row.append(u', '.join(o) if o else None)
-            if has_comment_column:
-                row.append(msg.comment if msg is not None else None)
-            if has_tcomment_column:
-                row.append(msg.tcomment if msg is not None else None)
-            for cat in catalogs:
-                cat = cat[1]
-                msg = cat.find(msgid, msgctxt=msgctxt)
-                if msg is None:
-                    row.append(None)
-                elif 'fuzzy' in msg.flags:
-                    cell = prepare_cell(sheet,msg.msgstr,font=fuzzy_font)
-                    row.append(cell)
-                else:
-                    row.append(msg.msgstr)
-            row_widths = [ max(rw,r) for rw,r in zip( row_widths, [len(r) for r in row] ) ]
-            sheet.append(row)
+    for (msgid, msgctxt, message) in tqdm(messages,desc='Writing catalog to sheet'):
+        row = []
+        if has_msgctxt_column is not None:
+            row.append(msgctxt)
+        row.append(msgid)
+        msg = ref_catalog.find(msgid, msgctxt=msgctxt)
+        if has_occurrences_column:
+            o = []
+            if msg is not None:
+                for (entry, lineno) in msg.occurrences:
+                    if lineno:
+                        o.append(u'%s:%s' % (entry, lineno))
+                    else:
+                        o.append(entry)
+            row.append(u', '.join(o) if o else None)
+        if has_comment_column:
+            row.append(msg.comment if msg is not None else None)
+        if has_tcomment_column:
+            row.append(msg.tcomment if msg is not None else None)
+        for cat in catalogs:
+            cat = cat[1]
+            msg = cat.find(msgid, msgctxt=msgctxt)
+            if msg is None:
+                row.append(None)
+            elif 'fuzzy' in msg.flags:
+                cell = prepare_cell(sheet,msg.msgstr,font=fuzzy_font)
+                row.append(cell)
+            else:
+                row.append(msg.msgstr)
+        row_widths = [ max(rw,r) for rw,r in zip( row_widths, [len(r) for r in row] ) ]
+        sheet.append(row)
 
     book.save(output)
-    click.secho(f'{output.name} created',italic=True)
 
-    click.secho('Adjusting columns width ...',italic=True)
+    # Adjusting columns width
     temp_book = openpyxl.load_workbook(output.name)
     sheet = temp_book['Translations']
     min_value = 20
@@ -322,8 +325,8 @@ def toXLS(comments, output, catalogs, msgmerge):
         column_width_calculation = math.trunc((row_widths[cn-1]*7.6+5)/7*256)/256
         # print(f'column: {get_column_letter(cn)} length: {row_widths[cn-1]}, calculated length: {column_width_calculation} ')
         sheet.column_dimensions[get_column_letter(cn)].width = max( min(column_width_calculation, max_value), min_value )
-    for row in sheet.iter_rows():
-        for ce in row:
+    for row in tqdm(sheet.iter_rows(),total=sheet.max_row,desc='Adjusting columns width',position=0):
+        for ce in tqdm(row,total=sheet.max_column,position=1,leave=False):
           ce.alignment = Alignment(wrapText=True,vertical='center')
 
     click.secho('Styling table ...',italic=True)
@@ -337,6 +340,8 @@ def toXLS(comments, output, catalogs, msgmerge):
     sheet.add_table(tab)
 
     temp_book.save(output.name)
+    click.secho(f'{output.name} created', italic=True)
+
 
 if __name__ == '__main__':
     poexcel()
