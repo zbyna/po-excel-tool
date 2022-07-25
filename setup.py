@@ -11,7 +11,7 @@ install_requires=[
         'tqdm',
         ]
 
-setup(name='po-excel-tool',
+setup(name='poexceltool',
       version=version,
       description='Convert between Excel and PO files',
       long_description=open('README.md').read() + '\n' + \
