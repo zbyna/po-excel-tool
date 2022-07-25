@@ -74,6 +74,8 @@ Options:
 ```
 
 ## Instalation
-TBD
+```
+pip install git+https://github.com/zbyna/po-excel-tool.git#egg=poexceltool
+```
 
 As a base for this project was https://github.com/wichert/po-xls used. Thank you!
