@@ -4,7 +4,7 @@ I created this command line utility to speed up my own translating process using
 
 It can be basically used for:
   - adding multiple [PO](https://www.drupal.org/community/contributor-guide/reference-information/localize-drupal-org/working-with-offline/po-and-pot-files#s-po-files) files to one sheet in Excel file
-  - extract required locale from xlsx sheet to [PO](https://www.drupal.org/community/contributor-guide/reference-information/localize-drupal-org/working-with-offline/po-and-pot-files#s-po-files) file
+  - extract required locale(s) from xlsx sheet to [PO](https://www.drupal.org/community/contributor-guide/reference-information/localize-drupal-org/working-with-offline/po-and-pot-files#s-po-files) file(s)
 
 As I often use [Babel](https://babel.pocoo.org/en/latest/index.html) for [extracting](https://babel.pocoo.org/en/latest/cmdline.html#extract) traslated strings which generates [POT](https://www.drupal.org/community/contributor-guide/reference-information/localize-drupal-org/working-with-offline/po-and-pot-files#s-pot-files) file it is possible:
   - to merge [POT](https://www.drupal.org/community/contributor-guide/reference-information/localize-drupal-org/working-with-offline/po-and-pot-files#s-pot-files) file with older [PO](https://www.drupal.org/community/contributor-guide/reference-information/localize-drupal-org/working-with-offline/po-and-pot-files#s-po-files) files before creating spreadsheet table
