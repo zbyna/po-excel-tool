@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys
 
-version = '0.0.5'
+version = '0.0.9'
 
 install_requires=[
         'click',
@@ -16,6 +16,7 @@ setup(name='poexceltool',
       description='Convert between Excel and PO files',
       long_description=open('README.md').read() + '\n' + \
               open('changes.md').read(),
+      long_description_content_type='text/markdown',
       classifiers=[
           'Environment :: Console',
           'Intended Audience :: Developers',
