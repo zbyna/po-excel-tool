@@ -16,7 +16,7 @@ Workflow is as minimal as possible, you need only two commands:
 
 Ouput table is hopefully :slightly_smiling_face: beautifully formatted and columns´ length is adjusted:
 
-![image](https://user-images.githubusercontent.com/3373705/180677755-a3aeabec-fe66-49e7-b895-3fc927e2d601.png)
+![image](https://i.imgur.com/IKmDH0F.png)
 
 ## Using
 
@@ -76,6 +76,10 @@ Options:
 ## Instalation
 ```
 pip install git+https://github.com/zbyna/po-excel-tool.git#egg=poexceltool
+```
+or
+```
+pip install poexceltool
 ```
 
 As a base for this project was https://github.com/wichert/po-xls used. Thank you!
