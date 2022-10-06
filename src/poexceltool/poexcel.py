@@ -124,7 +124,7 @@ def fromXLS(ignore, locale, input_file, output_dir):
             catalog.metadata['Content-Transfer-Encoding'] = '8bit'
             catalog.metadata['Language'] = locale_name
             catalog.metadata['Generated-By'] = 'xls-to-po 1.0'
-            for row in tqdm(sheet.iter_rows(min_row=2, max_row=sheet.max_row - 1), total=sheet.max_row-1, desc=f"creating {locale_name}", position=1, leave=False):
+            for row in tqdm(sheet.iter_rows(min_row=2, max_row=sheet.max_row ), total=sheet.max_row, desc=f"creating {locale_name}", position=1, leave=False):
                 # time.sleep(0.0001)
                 row = [c.value for c in row]
                 if not row[msgid_column]:
