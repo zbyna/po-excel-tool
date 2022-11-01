@@ -208,7 +208,7 @@ def toXLS(comments, output, catalogs, msgmerge):
 
     \b
     pet toxls en.po Bulgarian.po
-    - add files en.po and bg.po as en and bg locale to messages.xlsx
+    - add files en.po and Bulgarian.po as en and bg locale to messages.xlsx
     \b
     pet toxls en=British.po cs=Czech.po
     - add files British.po and Czech.po as en and cs locale to messages.xlsx
